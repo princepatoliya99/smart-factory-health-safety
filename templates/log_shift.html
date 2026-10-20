@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Log shift{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h2>📝 Shift production log</h2>
+  <form method="post">
+    <label>Machine</label>
+    <select name="machine_id">{% for m in machines %}<option>{{ m.machine_id }}</option>{% endfor %}</select>
+    <label>Run hours (of 8h shift)</label><input type="number" name="run_hours" step="0.1" min="0" max="8" value="7.5" required>
+    <label>Downtime hours</label><input type="number" name="downtime_hours" step="0.1" min="0" max="8" value="0.5" required>
+    <label>Parts produced</label><input type="number" name="parts_produced" min="0" value="150" required>
+    <label>Defective parts</label><input type="number" name="defects" min="0" value="2" required>
+    <div style="margin-top:16px"><button class="btn" type="submit">Save shift log</button></div>
+  </form>
+</div>
+{% endblock %}

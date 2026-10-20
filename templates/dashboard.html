@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 style="margin-top:0">Welcome, {{ user.name }} <span style="opacity:.6;font-size:14px">(Shift {{ user.shift }})</span></h2>
+<div class="kpis">
+  <div class="kpi k1"><div class="num">{{ open_faults }}</div><div class="lbl">Open faults</div></div>
+  <div class="kpi k2"><div class="num">{{ red }}</div><div class="lbl">High-risk machines</div></div>
+  <div class="kpi k3"><div class="num">{{ overdue }}</div><div class="lbl">Overdue maintenance</div></div>
+  <div class="kpi k4"><div class="num">{{ machines|length }}</div><div class="lbl">Machines tracked</div></div>
+</div>
+
+<div class="card">
+  <h2>⚠️ Needs attention</h2>
+  <table>
+    <tr><th>Machine</th><th>Type</th><th>Risk</th><th>Open faults</th><th>Maintenance</th><th></th></tr>
+    {% for s in machines if s.level == 'red' or s.open_faults > 0 or s.maint_status == 'overdue' %}
+    <tr>
+      <td><b>{{ s.machine.machine_id }}</b></td><td>{{ s.machine.type }}</td>
+      <td><span class="badge {{ s.level }}">{{ s.risk if s.risk is not none else '—' }}</span></td>
+      <td>{% if s.open_faults %}<span class="badge red">{{ s.open_faults }}</span>{% else %}0{% endif %}</td>
+      <td>{% if s.maint_status == 'overdue' %}<span class="badge red">OVERDUE</span>{% elif s.maint_status == 'due_soon' %}<span class="badge yellow">DUE SOON</span>{% else %}<span class="badge green">OK</span>{% endif %}</td>
+      <td><a class="btn" href="{{ url_for('machine_detail', mid=s.machine.machine_id) }}">Open</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">✅ All machines healthy right now.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>🆕 Latest open faults</h2>
+  <table>
+    <tr><th>Machine</th><th>Fault</th><th>Reported by</th><th></th></tr>
+    {% for f in recent_faults %}
+    <tr><td><b>{{ f.machine_id }}</b></td><td>{{ f.fault_type }}</td><td>{{ f.operator_name }}</td>
+    <td><a class="btn" href="{{ url_for('fault_detail', fid=f._id) }}">View / Fix</a></td></tr>
+    {% else %}<tr><td colspan="4">No open faults.</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>📊 Analytics</h2>
+  <p style="opacity:.75;font-size:14px">Reports are computed from live MongoDB data. After entering new logs, recompute to refresh every chart.</p>
+  <form method="post" action="{{ url_for('recompute') }}" style="display:inline">
+    <button class="btn ok" type="submit">🔄 Recompute analytics</button>
+  </form>
+  <a class="btn" href="{{ url_for('analytics') }}">Open analytics dashboard</a>
+</div>
+{% endblock %}

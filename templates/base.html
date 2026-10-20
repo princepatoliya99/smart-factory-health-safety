@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Smart Factory{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav>
+  <span class="brand">🏭 Smart Factory</span>
+  {% if session.operator_id %}
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('machines') }}">Machines</a>
+    <a href="{{ url_for('faults') }}">Faults</a>
+    <a href="{{ url_for('safety_check') }}">Safety Check</a>
+    <a href="{{ url_for('log_shift') }}">Log Shift</a>
+    <a href="{{ url_for('log_breakdown') }}">Log Breakdown</a>
+    <a href="{{ url_for('analytics') }}">Analytics</a>
+    <span class="spacer"></span>
+    <span class="who">{{ user.name if user else session.operator_id }}</span>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  {% endif %}
+</nav>
+<div class="wrap">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Fault {{ fault.machine_id }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:680px">
+  <h2>{{ fault.machine_id }} — {{ fault.fault_type }}</h2>
+  <p style="opacity:.75;font-size:13px">Reported by {{ fault.operator_name }} ({{ fault.operator_id }}, shift {{ fault.shift }}) on {{ fault.date.strftime('%d %b %Y %H:%M') }}</p>
+  <p>{{ fault.description }}</p>
+  {% if fault.photo %}<img class="photo" src="{{ url_for('uploaded_file', fname=fault.photo) }}">{% endif %}
+  <p>Status: {% if fault.status == 'open' %}<span class="badge red">OPEN</span>{% else %}<span class="badge green">FIXED</span>{% endif %}</p>
+  {% if fault.status == 'open' %}
+  <form method="post">
+    <label>What did you do to fix it?</label>
+    <textarea name="fix_notes" required placeholder="e.g. Replaced the coolant hose, cleaned the floor, tested for 10 min — no leak"></textarea>
+    <div style="margin-top:16px"><button class="btn ok" type="submit">✅ Mark as fixed</button></div>
+  </form>
+  {% else %}
+  <p><b>Fixed on:</b> {{ fault.fixed_date.strftime('%d %b %Y %H:%M') if fault.fixed_date }} by {{ fault.fixed_by }}</p>
+  <p><b>Fix notes:</b> {{ fault.fix_notes }}</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Safety check{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h2>✅ Daily safety checklist</h2>
+  <form method="post">
+    <label>Machine</label>
+    <select name="machine_id">{% for m in machines %}<option>{{ m.machine_id }}</option>{% endfor %}</select>
+    {% for key, label in items %}
+    <div class="radio-row"><span>{{ label }}</span>
+      <label style="display:inline;margin:0"><input type="radio" name="{{ key }}" value="pass" checked> Pass</label>
+      <label style="display:inline;margin:0"><input type="radio" name="{{ key }}" value="fail"> Fail</label>
+    </div>
+    {% endfor %}
+    <div style="margin-top:16px"><button class="btn ok" type="submit">Submit checklist</button></div>
+  </form>
+</div>
+{% endblock %}

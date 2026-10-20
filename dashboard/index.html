@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Factory Health & Safety Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, Arial, sans-serif; }
+  body {
+    margin: 0; color: #eef1f7; min-height: 100vh;
+    background: linear-gradient(135deg, #0b1026 0%, #1b1f4b 45%, #3b1f5e 100%);
+    background-attachment: fixed;
+  }
+  header {
+    padding: 28px 36px;
+    background: linear-gradient(90deg, rgba(20,16,60,.85), rgba(90,30,120,.55));
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    backdrop-filter: blur(6px);
+  }
+  header h1 { margin: 0; font-size: 26px; letter-spacing: .5px;
+    background: linear-gradient(90deg, #ffd76a, #ff8a5c, #c86bff);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header p { margin: 6px 0 0; opacity: .7; font-size: 13px; }
+  .wrap { padding: 24px 36px; max-width: 1440px; margin: auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi { border-radius: 16px; padding: 20px; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+         border: 1px solid rgba(255,255,255,.15); }
+  .kpi .num { font-size: 34px; font-weight: 800; }
+  .kpi .lbl { font-size: 13px; opacity: .85; margin-top: 4px; }
+  .k1 { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+  .k2 { background: linear-gradient(135deg, #f7971e, #ffd200); }
+  .k3 { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+  .k4 { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .k5 { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+    border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 20px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.35); backdrop-filter: blur(8px);
+  }
+  .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 700;
+    background: linear-gradient(90deg, #ffd76a, #ff8a5c); -webkit-background-clip: text;
+    background-clip: text; color: transparent; }
+  .card canvas { max-height: 300px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.08); }
+  th { color: #ffd76a; font-weight: 600; }
+  tr:hover td { background: rgba(255,255,255,.04); }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px;
+           font-weight: 700; color: #fff; }
+  .red { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+  .yellow { background: linear-gradient(135deg, #f7971e, #ffd200); color: #3a2a00; }
+  .green { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .full { grid-column: 1 / -1; }
+  .scroll { max-height: 380px; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 8px; } .scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 4px; }
+  footer { text-align: center; color: rgba(255,255,255,.45); font-size: 12px; padding: 24px; }
+  .ai-strip {
+    background: linear-gradient(90deg, #4a00e0, #8e2de2, #ff4b9e);
+    border-radius: 16px; padding: 18px 22px; margin-bottom: 24px; color: #fff;
+    box-shadow: 0 8px 24px rgba(142,45,226,.4); border: 1px solid rgba(255,255,255,.2);
+  }
+  .ai-strip b { font-size: 15px; } .ai-strip span { opacity: .9; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏭 Smart Factory Health &amp; Safety Analytics</h1>
+  <p id="gen">CNC / VMC manufacturing plant &bull; MongoDB big-data analytics &bull; RAG + LLM</p>
+</header>
+<div class="wrap">
+  <div class="ai-strip">
+    <b>🤖 AI Copilot enabled</b><br>
+    <span>Ask anything in plain English — RAG retrieves the right factory records from MongoDB and the LLM explains the answer. Try: <i>"which machine should I fix first and why?"</i></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card full">
+      <h2>🚦 Machine Risk Score</h2>
+      <div class="scroll"><table id="riskTable">
+        <tr><th>Machine</th><th>Type</th><th>Risk</th><th>Level</th><th>Violations (90d)</th><th>Downtime (90d)</th><th>Maintenance</th><th>OEE</th></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>Safety violations per machine (90 days)</h2><canvas id="chViol"></canvas></div>
+    <div class="card"><h2>Violation trend (12 weeks)</h2><canvas id="chTrend"></canvas></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>Downtime by cause (90 days)</h2><canvas id="chCause"></canvas></div>
+    <div class="card"><h2>Checklist item failures (90 days)</h2><canvas id="chItems"></canvas></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>OEE per machine (30 days)</h2><canvas id="chOee"></canvas></div>
+    <div class="card"><h2>Tool life used % by type</h2><canvas id="chTools"></canvas></div>
+  </div>
+
+  <div class="grid">
+    <div class="card full">
+      <h2>🔧 Maintenance schedule</h2>
+      <div class="scroll"><table id="maintTable">
+        <tr><th>Machine</th><th>Type</th><th>Runtime (h)</th><th>Hours left</th><th>Status</th><th>MTBF (h)</th><th>Cost (₹)</th></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>⚠️ Tool alerts</h2><div id="toolAlerts"></div></div>
+    <div class="card"><h2>👷 Top violating operators (90 days)</h2><div class="scroll"><table id="opTable">
+      <tr><th>Operator</th><th>Name</th><th>Violations</th></tr>
+    </table></div></div>
+  </div>
+</div>
+<footer>Smart Factory Health &amp; Safety Analytics &bull; MongoDB + RAG + LLM</footer>
+
+<script>
+Chart.defaults.color = 'rgba(255,255,255,.75)';
+Chart.defaults.borderColor = 'rgba(255,255,255,.08)';
+const R = p => fetch('../results/' + p).then(r => r.json());
+const badge = (t, c) => `<span class="badge ${c}">${t}</span>`;
+const lvlBadge = l => badge(l.toUpperCase(), l);
+
+function grad(id, c1, c2) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, 300);
+  g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+}
+
+Promise.all([R('summary.json'), R('risk.json'), R('safety.json'), R('oee.json'),
+             R('maintenance.json'), R('tools.json')]).then(([s, risk, safety, oee, maint, tools]) => {
+  document.getElementById('gen').innerHTML += ` &bull; generated ${s.generated_at.slice(0,16).replace('T',' ')}`;
+  const k = [
+    ['k1', s.total_violations_90d, 'Safety violations (90 days)'],
+    ['k2', s.red_machines.length, 'High-risk machines'],
+    ['k3', s.overdue_machines, 'Overdue maintenance'],
+    ['k4', (s.avg_oee_30d*100).toFixed(1) + '%', 'Average OEE (30 days)'],
+    ['k5', (s.total_documents/1000).toFixed(1) + 'k', 'Documents analysed (MongoDB)'],
+  ];
+  document.getElementById('kpis').innerHTML =
+    k.map(([c, n, l]) => `<div class="kpi ${c}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('');
+
+  document.getElementById('riskTable').innerHTML += risk.machines.map(m => `<tr>
+    <td><b>${m.machine_id}</b></td><td>${m.type}</td><td><b>${m.risk_score}</b></td>
+    <td>${lvlBadge(m.level)}</td><td>${m.violations_90d}</td><td>${m.downtime_90d} h</td>
+    <td>${m.maintenance_status === 'overdue' ? badge('OVERDUE','red') : m.maintenance_status === 'due_soon' ? badge('DUE SOON','yellow') : badge('OK','green')}</td>
+    <td>${(m.oee_30d*100).toFixed(1)}%</td></tr>`).join('');
+
+  const bar = (id, labels, data, c1, c2) => new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: grad(id, c1, c2), borderRadius: 6 }] },
+    options: { responsive: true, plugins: { legend: { display: false } } } });
+
+  bar('chViol', safety.per_machine.slice(0,12).map(x=>x._id),
+      safety.per_machine.slice(0,12).map(x=>x.total_violations), '#ff416c', '#ff4b2b');
+  new Chart(document.getElementById('chTrend'), { type: 'line',
+    data: { labels: safety.weekly_trend.map((_,i)=>'W'+(i+1)),
+            datasets: [{ data: safety.weekly_trend.map(x=>x.violations),
+                         borderColor: '#c86bff', backgroundColor: 'rgba(200,107,255,.15)',
+                         tension: .35, fill: true, pointBackgroundColor: '#ffd76a' }] },
+    options: { responsive: true, plugins: { legend: { display: false } } } });
+  new Chart(document.getElementById('chCause'), { type: 'doughnut',
+    data: { labels: oee.downtime_by_cause.map(x=>x._id),
+            datasets: [{ data: oee.downtime_by_cause.map(x=>Math.round(x.downtime_hours)),
+              backgroundColor: ['#ff416c','#ff8a5c','#ffd76a','#38ef7d','#6dd5ed','#c86bff','#ff4b9e','#8e9eab'] }] },
+    options: { responsive: true, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } } });
+  bar('chItems', safety.per_item.map(x=>x.item.replace(/_/g,' ')),
+      safety.per_item.map(x=>x.fails), '#f7971e', '#ffd200');
+  bar('chOee', oee.per_machine.map(x=>x.machine_id),
+      oee.per_machine.map(x=>+(x.oee*100).toFixed(1)), '#11998e', '#38ef7d');
+  bar('chTools', tools.by_type.map(x=>x.tool_type),
+      tools.by_type.map(x=>x.avg_life_used_pct), '#4a00e0', '#c86bff');
+
+  const stBadge = st => st === 'overdue' ? badge('OVERDUE','red') : st === 'due_soon' ? badge('DUE SOON','yellow') : badge('OK','green');
+  document.getElementById('maintTable').innerHTML += maint.machines.map(m => `<tr>
+    <td><b>${m.machine_id}</b></td><td>${m.type}</td><td>${m.current_runtime_hours}</td>
+    <td><b>${m.hours_remaining}</b></td><td>${stBadge(m.status)}</td>
+    <td>${m.mtbf_hours ?? '-'}</td><td>₹${m.maintenance_cost_rs.toLocaleString('en-IN')}</td></tr>`).join('');
+
+  document.getElementById('toolAlerts').innerHTML =
+    tools.alerts.length ? tools.alerts.map(a => `<p>⚠️ ${a.message}</p>`).join('')
+                        : '<p>✅ All tool types performing within rated life.</p>';
+
+  document.getElementById('opTable').innerHTML += safety.per_operator.map(o => `<tr>
+    <td><b>${o._id}</b></td><td>${o.name}</td><td>${o.total_violations}</td></tr>`).join('');
+}).catch(e => { document.body.innerHTML = '<p style="padding:40px;color:#fff">Could not load results. Run <b>python analytics/pipelines.py</b> first, then serve with <b>python -m http.server</b> and open http://localhost:8000/dashboard/</p>'; console.error(e); });
+</script>
+</body>
+</html>

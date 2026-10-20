@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Report fault{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h2>📸 Report a machine fault</h2>
+  <form method="post" enctype="multipart/form-data">
+    <label>Machine</label>
+    <select name="machine_id" required>
+      {% for m in machines %}<option value="{{ m.machine_id }}" {% if m.machine_id==pre %}selected{% endif %}>{{ m.machine_id }} — {{ m.type }}</option>{% endfor %}
+    </select>
+    <label>Fault type</label>
+    <select name="fault_type">{% for t in fault_types %}<option>{{ t }}</option>{% endfor %}</select>
+    <label>Photo of the fault (optional)</label>
+    <input type="file" name="photo" accept="image/*">
+    <label>Describe the problem</label>
+    <textarea name="description" required placeholder="e.g. Coolant leaking near the chuck, puddle on the floor"></textarea>
+    <div style="margin-top:16px"><button class="btn warn" type="submit">Submit fault report</button></div>
+  </form>
+</div>
+{% endblock %}

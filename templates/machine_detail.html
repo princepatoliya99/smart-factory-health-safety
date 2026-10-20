@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Machine {{ st.machine.machine_id }}{% endblock %}
+{% block content %}
+<h2 style="margin-top:0">{{ st.machine.machine_id }} — {{ st.machine.type }}</h2>
+<div class="kpis">
+  <div class="kpi {{ st.level }}"><div class="num">{{ st.risk if st.risk is not none else '—' }}</div><div class="lbl">Risk score ({{ st.level }})</div></div>
+  <div class="kpi {{ 'k1' if st.open_faults else 'k4' }}"><div class="num">{{ st.open_faults }}</div><div class="lbl">Open faults</div></div>
+  <div class="kpi {{ 'k1' if st.maint_status=='overdue' else ('k2' if st.maint_status=='due_soon' else 'k4') }}"><div class="num">{{ st.hours_left }}h</div><div class="lbl">Maintenance ({{ st.maint_status.replace('_',' ') }})</div></div>
+</div>
+
+<div style="margin-bottom:18px">
+  <a class="btn warn" href="{{ url_for('report_fault', machine=st.machine.machine_id) }}">📸 Report fault</a>
+  <a class="btn ghost" href="{{ url_for('safety_check') }}">✅ Safety check</a>
+  <a class="btn ghost" href="{{ url_for('log_breakdown') }}">🔧 Log breakdown</a>
+</div>
+
+<div class="card">
+  <h2>⚠️ Open faults on this machine</h2>
+  <table>
+    <tr><th>Date</th><th>Type</th><th>Description</th><th>By</th><th></th></tr>
+    {% for f in faults if f.status == 'open' %}
+    <tr><td>{{ f.date.strftime('%d %b %H:%M') }}</td><td>{{ f.fault_type }}</td>
+        <td>{{ f.description[:60] }}</td><td>{{ f.operator_name }}</td>
+        <td><a class="btn ok" href="{{ url_for('fault_detail', fid=f._id) }}">Fix</a></td></tr>
+    {% else %}<tr><td colspan="5">No open faults. ✅</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>🕘 Recent safety checks</h2>
+  <table>
+    <tr><th>Date</th><th>Shift</th><th>Violations</th></tr>
+    {% for s in safety %}<tr><td>{{ s.date.strftime('%d %b') }}</td><td>{{ s.shift }}</td>
+      <td>{% if s.violations %}<span class="badge red">{{ s.violations }}</span>{% else %}<span class="badge green">0</span>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>🔧 Recent breakdowns</h2>
+  <table>
+    <tr><th>Date</th><th>Cause</th><th>Downtime</th></tr>
+    {% for b in breakdowns %}<tr><td>{{ b.date.strftime('%d %b') }}</td><td>{{ b.cause }}</td><td>{{ b.downtime_hours }} h</td></tr>
+    {% else %}<tr><td colspan="3">None recorded.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

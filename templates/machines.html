@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Machines{% endblock %}
+{% block content %}
+<h2 style="margin-top:0">All machines — live status</h2>
+<div class="machine-grid">
+{% for s in machines %}
+<a class="machine-card {{ s.level }}" href="{{ url_for('machine_detail', mid=s.machine.machine_id) }}">
+  <h3>{{ s.machine.machine_id }} <span style="font-weight:400;font-size:12px">{{ s.machine.type }}</span></h3>
+  <div class="meta">
+    Risk: <b>{{ s.risk if s.risk is not none else '—' }}</b> ({{ s.level }})<br>
+    Open faults: <b>{{ s.open_faults }}</b><br>
+    Maintenance: <b>{{ s.maint_status.replace('_',' ') }}</b> ({{ s.hours_left }}h left)
+  </div>
+</a>
+{% endfor %}
+</div>
+{% endblock %}

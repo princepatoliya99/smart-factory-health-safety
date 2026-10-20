@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Faults{% endblock %}
+{% block content %}
+<h2 style="margin-top:0">Fault reports
+  <span style="font-size:13px;opacity:.7">
+    <a href="{{ url_for('faults', status='open') }}">open</a> |
+    <a href="{{ url_for('faults', status='fixed') }}">fixed</a> |
+    <a href="{{ url_for('faults', status='all') }}">all</a>
+  </span>
+  <a class="btn warn" href="{{ url_for('report_fault') }}" style="float:right">📸 Report fault</a>
+</h2>
+<div class="card"><table>
+  <tr><th>Date</th><th>Machine</th><th>Type</th><th>Description</th><th>By</th><th>Status</th><th></th></tr>
+  {% for f in faults %}
+  <tr>
+    <td>{{ f.date.strftime('%d %b %H:%M') }}</td>
+    <td><b>{{ f.machine_id }}</b></td><td>{{ f.fault_type }}</td>
+    <td>{{ f.description[:50] }}{% if f.photo %} 📎{% endif %}</td>
+    <td>{{ f.operator_name }}</td>
+    <td>{% if f.status == 'open' %}<span class="badge red">OPEN</span>{% else %}<span class="badge green">FIXED</span>{% endif %}</td>
+    <td><a class="btn" href="{{ url_for('fault_detail', fid=f._id) }}">{{ 'Fix' if f.status=='open' else 'View' }}</a></td>
+  </tr>
+  {% else %}<tr><td colspan="7">No fault reports.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}
